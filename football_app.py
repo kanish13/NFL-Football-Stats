@@ -11,10 +11,7 @@ This app performs simple webscraping of NFL Football player stats data (focusing
 """)
 
 st.sidebar.header('User Input Features')
-selected_year = st.sidebar.selectbox('Year', list(reversed(range(1990,2020))))
-
-# Web scraping of NFL player stats
-# https://www.pro-football-reference.com/years/2019/rushing.htm
+selected_year = st.sidebar.selectbox('Year', list(reversed(range(1990, 2020))))
 
 @st.cache_data
 def load_data(year):
@@ -22,9 +19,11 @@ def load_data(year):
         url = f"https://www.pro-football-reference.com/years/{year}/rushing.htm"
         html = pd.read_html(url, header=1)
         df = html[0]
+        st.write("Raw data loaded: ", df.head())
         raw = df.drop(df[df.Age == 'Age'].index)  # Deletes repeating headers in content
         raw = raw.fillna(0)
         playerstats = raw.drop(['Rk'], axis=1)
+        st.write("Processed data: ", playerstats.head())
         return playerstats
     except Exception as e:
         st.error(f"Error loading data: {e}")
@@ -44,7 +43,10 @@ unique_pos = ['RB', 'QB', 'WR', 'FB', 'TE']
 selected_pos = st.sidebar.multiselect('Position', unique_pos, unique_pos)
 
 # Filtering data
-df_selected_team = playerstats[(playerstats.Tm.isin(selected_team)) & (playerstats.Pos.isin(selected_pos))]
+if not playerstats.empty:
+    df_selected_team = playerstats[(playerstats.Tm.isin(selected_team)) & (playerstats.Pos.isin(selected_pos))]
+else:
+    df_selected_team = pd.DataFrame()
 
 st.header('Display Player Stats of Selected Team(s)')
 if not df_selected_team.empty:
